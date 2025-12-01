@@ -1,3 +1,4 @@
+import Channel from '../models/channel.js';
 import Video from '../models/video.js';
 
 //  @desc   Create a new video
@@ -11,17 +12,30 @@ export const createVideo = async(req, res)=>{
 
         const {title, description, thumbnailUrl, videoUrl, category} = req.body;
 
+
+        // find channel owned by this user
+        const channel = await Channel.findOne({owner: req.user.id});
+        if(!channel){
+            return res.status(400).json({message: "You must create a channel before uploading"})
+        }
         const newVideo = new Video({
             uploader: req.user.id, // the logged-in user is the uploader
             title,
             description,
             thumbnailUrl,
             videoUrl,
-            category // We need this for the filter feature 
+            category, // We need this for the filter feature 
+            channelId: channel._id
         })
 
         // save to mongodb
         const savedVideo = await newVideo.save();
+        // add video ID to the channel's video list
+        if(!channel.videos){
+            channel.videos = [];
+        }
+        channel.videos.push(savedVideo._id);
+        await channel.save();
         res.status(201).json(savedVideo);
     } catch(error){
         res.status(500).json({message: "Failed to create video", error: error.message})
