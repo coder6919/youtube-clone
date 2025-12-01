@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+/* Define your custom YouTube colors using CSS variables for v4 */
+@theme {
+  --color-youtube-red: #FF0000;
+  --color-youtube-black: #0F0F0F;
+  --color-youtube-gray: #272727;
+}
+
+body {
+  @apply bg-youtube-black text-white font-sans;
+}
