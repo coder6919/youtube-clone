@@ -5,6 +5,7 @@ import connectDB from './config/db.js';
 import authRoutes from './routes/auth.js'
 import videoRoutes from './routes/videos.js';
 import channelRoutes from './routes/channel.js'
+import commentRoutes from './routes/comment.js'
 
 // Load env vars
 dotenv.config();
@@ -24,7 +25,7 @@ app.use(express.json())
 app.use('/api/auth',authRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/channels', channelRoutes)
-
+app.use('/api/comments', commentRoutes)
 // test route 
 app.get('/', (req,res)=>{
     res.send('Youtube clone is running...');
