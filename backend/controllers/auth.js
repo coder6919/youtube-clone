@@ -1,4 +1,4 @@
-import User from '../models/user';
+import User from '../models/user.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -59,7 +59,7 @@ export const login = async (req,res)=>{
         }
 
         // 3 Generate JWT token
-        const token = jwt.sign({id: user._id}, process.env.JWT_SECRET,{expiresIn: 'Id',});
+        const token = jwt.sign({id: user._id}, process.env.JWT_SECRET,{expiresIn: '1d',});
 
         // 4 Send response (exclude password)
 
