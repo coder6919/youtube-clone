@@ -24,7 +24,7 @@ const storage = new CloudinaryStorage({
 });
 
 const upload = multer({ storage,
-    limits: { fileSize: 50 * 1024 * 1024 } // Limit to 50MB per file
+    limits: { fileSize: 100 * 1024 * 1024 } // Limit to 50MB per file
  });
 
 // 2. Route with Error Handling

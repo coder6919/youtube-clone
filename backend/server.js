@@ -34,10 +34,6 @@ app.get('/', (req,res)=>{
     res.send('Youtube clone is running...');
 })
 
-
-const __dirname = path.resolve();
-app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
-
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, ()=> {
