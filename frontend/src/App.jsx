@@ -7,7 +7,8 @@ import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar'; // <--- Import Sidebar here
 import Home from './pages/Home';
 import VideoDetail from './pages/VideoDetail';
-// import Channel from './pages/Channel';
+import Channel from './pages/Channel';
+import CreateChannel from './pages/CreateChannel';
 import Login from './pages/Login';
 import Register from './pages/Register';
 
@@ -20,12 +21,12 @@ function App() {
 
   return (
     <Router>
-      <div className="flex flex-col min-h-screen bg-[#0F0F0F] text-white">
+      <div className="flex flex-col h-screen overflow-hidden bg-[#0F0F0F] text-white">
         {/* 1. Navbar stays at the top */}
         <Navbar toggleSidebar={toggleSidebar} />
         
         {/* 2. Main Flex Container: Sidebar + Content */}
-        <div className="flex flex-1 overflow-hidden h-[calc(100vh-56px)]">
+        <div className="flex flex-1 overflow-hidden">
           
           {/* Sidebar sits here, managed directly by App */}
           <Sidebar isOpen={sidebarOpen} />
@@ -36,7 +37,8 @@ function App() {
               {/* Note: We removed the 'sidebarOpen' prop from Home since it doesn't need it anymore */}
               <Route path="/" element={<Home />} />
               <Route path="/video/:id" element={<VideoDetail />} />
-              {/* <Route path="/channel/:id" element={<Channel />} /> */}
+              <Route path="/channel/:id" element={<Channel />} />
+              <Route path="/channel/new" element={<CreateChannel />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
             </Routes>

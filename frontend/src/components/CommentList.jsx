@@ -55,7 +55,7 @@ const CommentList = ({ videoId }) => {
       {user ? (
         <form onSubmit={handleAddComment} className="flex gap-4 mb-8">
           <img 
-            src={user.avatar || "https://via.placeholder.com/40"} 
+            src={user.avatar || `https://ui-avatars.com/api/?name=User&background=random`}
             alt="User" 
             className="w-10 h-10 rounded-full object-cover" 
           />
@@ -83,7 +83,7 @@ const CommentList = ({ videoId }) => {
         {comments.map((comment) => (
           <div key={comment._id} className="flex gap-4">
             <img 
-              src={comment.userId?.avatar || "https://via.placeholder.com/40"} 
+              src={comment.userId?.avatar || `https://ui-avatars.com/api/?name=${comment.userId?.username || 'User'}&background=random`}
               alt="Avatar" 
               className="w-10 h-10 rounded-full object-cover bg-gray-600"
               onError={(e) => e.target.src = "https://ui-avatars.com/api/?name=User&background=random"}

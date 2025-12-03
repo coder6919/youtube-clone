@@ -33,7 +33,7 @@ const VideoDetail = () => {
 
   // 3. Render the Video Player (Only runs if 'video' exists)
   return (
-    <div className="min-h-screen bg-[#0F0F0F] text-white p-4 md:p-6 flex flex-col lg:flex-row gap-6">
+    <div className="w-full bg-[#0F0F0F] text-white p-4 md:p-6 flex flex-col lg:flex-row gap-6">
       
       {/* LEFT SIDE: Video Player & Info */}
       <div className="w-full lg:w-[70%]">
