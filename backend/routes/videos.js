@@ -1,6 +1,6 @@
 import express from 'express';
 import { protect } from '../middleware/auth.js';
-import { createVideo, deleteVideo, getAllVideos, getVideoById } from '../controllers/video.js';
+import { createVideo, deleteVideo, getAllVideos, getVideoById,updateVideo } from '../controllers/video.js';
 
 const router = express.Router();
 
@@ -17,5 +17,8 @@ router.get('/:id', getVideoById)
 
 // DELETE /api/videos/:id -> Delete video (Protected)
 router.delete('/:id', protect, deleteVideo)
+
+// UPDATE /api/videos/:id -> Update video (Protected)
+router.put('/:id', protect, updateVideo);
 
 export default router

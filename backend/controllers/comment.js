@@ -34,6 +34,8 @@ export const addComment = async(req, res)=>{
         video.comments.push(savedComment._id);
         await video.save()
 
+        const populatedComment = await savedComment.populate('userId', 'username avatar');
+
         res.status(201).json(savedComment)
     } catch(error){
         res.status(500).json({message: "Failed to add comment", error: error.message})
