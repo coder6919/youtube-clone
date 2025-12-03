@@ -51,9 +51,6 @@ export const getAllVideos = async (req, res) => {
     try {
         const { category, search } = req.query;
 
-        // DEBUG LOG: See what the frontend is sending
-        console.log(`Fetching videos. Category: ${category}, Search: ${search}`);
-
         let query = {};
 
         // Filter by Category (Exact Match)
@@ -66,14 +63,10 @@ export const getAllVideos = async (req, res) => {
             query.title = { $regex: search, $options: 'i' };
         }
 
-        // DEBUG LOG: See the final query object
-        console.log("MongoDB Query:", query);
-
         const videos = await Video.find(query).populate('uploader', 'username avatar');
 
         res.status(200).json(videos);
     } catch (error) {
-        console.error("ERROR in getAllVideos:", error); // Log the crash details
         res.status(500).json({ message: "Failed to fetch videos", error: error.message });
     }
 };
@@ -83,11 +76,8 @@ export const getAllVideos = async (req, res) => {
 // @access  Public
 export const getVideoById = async (req, res) => {
     try {
-        console.log("-----------------------------------------");
-        console.log("1. getVideoById HIT! ID:", req.params.id);
-
         // Attempt to find the video
-        // Note: We use populate to get the Uploader's info (name/avatar)
+        // We use populate to get the Uploader's info (name/avatar)
         const video = await Video.findById(req.params.id).populate('uploader', 'username avatar subscribers');
 
         if (!video) {
@@ -98,8 +88,6 @@ export const getVideoById = async (req, res) => {
 
         // Respond
         res.status(200).json(video);
-        console.log("3. Data sent to frontend");
-        console.log("-----------------------------------------");
 
     } catch (error) {
         console.error("CRITICAL ERROR in getVideoById:", error);
@@ -131,9 +119,6 @@ export const deleteVideo = async (req, res) => {
 // @access  Private (Owner only)
 export const updateVideo = async (req, res) => {
     try {
-        // 1. Log what the frontend sent
-        // console.log("UPDATE REQUEST RECEIVED. ID:", req.params.id);
-        // console.log("Body Data:", req.body);
 
         const { title, description, thumbnailUrl, category } = req.body;
 
@@ -267,11 +252,9 @@ export const addView = async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         viewer = decoded.id; // Use User ID if available
       } catch (error) {
-        // Token invalid/expired? Just stick with IP.
       }
     }
-    // --------------------------
-
+    
     const updatedVideo = await Video.findByIdAndUpdate(
       videoId,
       { $addToSet: { viewedBy: viewer } },
