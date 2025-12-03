@@ -30,7 +30,7 @@ Purpose: (Optional) Used for formatting dates (e.g., "2 days ago") if implemente
 
 # 🗂️ Folder Structure ###
 
-src/
+```src/
 ├── assets/            # Static images (Logos)
 ├── components/        # Reusable UI Elements
 │   ├── Navbar.jsx     # Search bar, User Avatar, Logout logic
@@ -46,7 +46,7 @@ src/
 ├── utils/
 │   └── axios.js       # Pre-configured Axios instance with Base URL
 ├── App.jsx            # Route definitions and Layout Shell
-└── main.jsx           # Entry point
+└── main.jsx           # Entry point```
 
 
 🌟 Key Implementation Details
