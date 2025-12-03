@@ -10,3 +10,19 @@
 body {
   @apply bg-youtube-black text-white font-sans;
 }
+
+/* --- PLYR PLAYER CUSTOMIZATION --- */
+:root {
+  /* Change the main accent color to YouTube Red */
+  --plyr-color-main: #FF0000; 
+  
+  /*  Make the seek bar look smoother */
+  --plyr-video-control-color: #FFFFFF;
+  --plyr-control-icon-size: 18px;
+}
+
+/* Fix for dark mode visibility if needed */
+.plyr--video .plyr__controls {
+  background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0.7));
+  padding-bottom: 20px;
+}

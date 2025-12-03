@@ -1,33 +1,84 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from '../utils/axios';
+import { toast } from 'react-toastify';
+
+// --- COMPONENTS & ICONS ---
 import CommentList from '../components/CommentList';
 import { BiLike, BiDislike, BiShare } from "react-icons/bi";
 import { HiDownload } from "react-icons/hi";
-import { toast } from 'react-toastify';
+
+// --- VIDEO PLAYER (PLYR) ---
+import Plyr from "plyr-react";
+import "plyr-react/plyr.css"; // Import default styles
 
 const VideoDetail = () => {
+  // 1. URL Params: Get the Video ID from the browser URL (e.g. /video/65a...)
   const { id } = useParams();
-  
-  // Data State
+
+  // 2. Data State: Stores the video object fetched from backend
   const [video, setVideo] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // User & Interaction State
-  const user = JSON.parse(localStorage.getItem('user'));
+  // 3. User State: Memoized to prevent infinite re-renders in useEffect
+  const user = useMemo(() => {
+    return JSON.parse(localStorage.getItem('user'));
+  }, []); 
+
+  // 4. Interaction State: Tracks likes/dislikes locally for instant UI updates
   const [likeCount, setLikeCount] = useState(0);
   const [dislikeCount, setDislikeCount] = useState(0);
   const [userLiked, setUserLiked] = useState(false);
   const [userDisliked, setUserDisliked] = useState(false);
 
-  // 1. FETCH VIDEO
+  // --- HELPER: OPTIMIZE CLOUDINARY URL ---
+  // Transforms the raw URL to use Cloudinary's auto-format and auto-quality
+  const getOptimizedUrl = (url) => {
+    if (!url) return "";
+    return url.includes("/upload/") 
+      ? url.replace("/upload/", "/upload/f_auto,q_auto/") 
+      : url;
+  };
+
+  // --- PLYR CONFIGURATION (MEMOIZED) ---
+  // We freeze these settings so the player doesn't reload when you click "Like"
+  
+  // A. Source: The video file and thumbnail
+  const plyrSource = useMemo(() => {
+    if (!video) return null; // Safety check
+    return {
+      type: "video",
+      sources: [
+        {
+          src: getOptimizedUrl(video.videoUrl),
+          type: "video/mp4",
+        },
+      ],
+      poster: video.thumbnailUrl, // Thumbnail image
+    };
+  }, [video?.videoUrl, video?.thumbnailUrl]); // Only update if video URL changes
+
+  // B. Options: Controls, Speed, Autoplay
+  const plyrOptions = useMemo(() => ({
+    autoplay: true,
+    controls: [
+      'play-large', 'play', 'progress', 'current-time', 'duration', 
+      'mute', 'volume', 'captions', 'settings', 'pip', 'fullscreen'
+    ],
+    speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
+  }), []);
+
+  // --- EFFECTS (DATA FETCHING) ---
+
+  // 1. Fetch Video Data
   useEffect(() => {
     const fetchVideo = async () => {
       try {
-        const { data } = await axios.get(`/videos/find/${id}`); // Use the 'find' route
+        // Use the specific '/find/' route to avoid router conflicts
+        const { data } = await axios.get(`/videos/find/${id}`);
         setVideo(data);
         
-        // Initialize counts and status
+        // Sync local state with fetched data
         setLikeCount(data.likes.length);
         setDislikeCount(data.dislikes.length);
         if (user) {
@@ -42,99 +93,87 @@ const VideoDetail = () => {
       }
     };
     fetchVideo();
-  }, [id]);
+  }, [id, user]);
 
-  // Trigger View Count (Once per mount)
+  // 2. Increment View Count (Once per page load)
   useEffect(() => {
     const triggerView = async () => {
       try {
+        // Call API to increment view
         const { data } = await axios.put(`/videos/${id}/view`);
-        await axios.put(`/videos/${id}/view`);
-
+        // Update local state views immediately
         setVideo((prev) => prev ? { ...prev, views: data.views } : prev);
       } catch (error) {
         console.error("View count failed", error);
       }
     };
-    
-    // We add a small timeout to ensure it doesn't conflict with initial render
-    const timer = setTimeout(() => {
-        triggerView();
-    }, 1000);
 
+    // Small delay ensures strict mode doesn't double-count locally
+    const timer = setTimeout(() => triggerView(), 1000);
     return () => clearTimeout(timer);
   }, [id]);
 
-  // 2. OPTIMISTIC LIKE HANDLER
+  // --- ACTION HANDLERS (OPTIMISTIC UI) ---
+
   const handleLike = async () => {
     if (!user) return toast.error("Please login to like");
 
-    // A. Snapshot current state (in case we need to revert)
-    const previousLiked = userLiked;
-    const previousDisliked = userDisliked;
-    const previousLikeCount = likeCount;
-    const previousDislikeCount = dislikeCount;
+    // Snapshot state for rollback
+    const prevLiked = userLiked;
+    const prevCount = likeCount;
 
-    // B. Optimistically Update UI (Instant Feedback)
+    // Optimistic Update: Update UI instantly
     if (userLiked) {
-        // Untoggle Like
-        setUserLiked(false);
-        setLikeCount(prev => prev - 1);
+      setUserLiked(false);
+      setLikeCount(prev => prev - 1);
     } else {
-        // Toggle Like
-        setUserLiked(true);
-        setLikeCount(prev => prev + 1);
-        if (userDisliked) {
-            setUserDisliked(false);
-            setDislikeCount(prev => prev - 1);
-        }
+      setUserLiked(true);
+      setLikeCount(prev => prev + 1);
+      if (userDisliked) {
+        setUserDisliked(false);
+        setDislikeCount(prev => prev - 1);
+      }
     }
 
-    // C. Send Request to Server
+    // API Call
     try {
       await axios.put(`/videos/${id}/like`);
-      // Note: We don't need to do anything with the response because we already updated the UI!
     } catch (error) {
-      // D. Revert if API fails
-      setUserLiked(previousLiked);
-      setUserDisliked(previousDisliked);
-      setLikeCount(previousLikeCount);
-      setDislikeCount(previousDislikeCount);
+      // Revert on failure
+      setUserLiked(prevLiked);
+      setLikeCount(prevCount);
       toast.error("Failed to like");
     }
   };
 
-  // 3. OPTIMISTIC DISLIKE HANDLER
   const handleDislike = async () => {
     if (!user) return toast.error("Please login to dislike");
 
-    const previousLiked = userLiked;
-    const previousDisliked = userDisliked;
-    const previousLikeCount = likeCount;
-    const previousDislikeCount = dislikeCount;
+    const prevDisliked = userDisliked;
+    const prevCount = dislikeCount;
 
     if (userDisliked) {
-        setUserDisliked(false);
-        setDislikeCount(prev => prev - 1);
+      setUserDisliked(false);
+      setDislikeCount(prev => prev - 1);
     } else {
-        setUserDisliked(true);
-        setDislikeCount(prev => prev + 1);
-        if (userLiked) {
-            setUserLiked(false);
-            setLikeCount(prev => prev - 1);
-        }
+      setUserDisliked(true);
+      setDislikeCount(prev => prev + 1);
+      if (userLiked) {
+        setUserLiked(false);
+        setLikeCount(prev => prev - 1);
+      }
     }
 
     try {
       await axios.put(`/videos/${id}/dislike`);
     } catch (error) {
-      setUserLiked(previousLiked);
-      setUserDisliked(previousDisliked);
-      setLikeCount(previousLikeCount);
-      setDislikeCount(previousDislikeCount);
+      setUserDisliked(prevDisliked);
+      setDislikeCount(prevCount);
       toast.error("Failed to dislike");
     }
   };
+
+  // --- RENDER ---
 
   if (loading) return <div className="text-white text-center mt-20">Loading...</div>;
   if (!video) return <div className="text-white text-center mt-20">Video not found.</div>;
@@ -142,28 +181,29 @@ const VideoDetail = () => {
   return (
     <div className="w-full bg-[#0F0F0F] text-white p-4 md:p-6 flex flex-col lg:flex-row gap-6">
 
+      {/* --- LEFT COLUMN: Player, Info, Comments --- */}
       <div className="w-full lg:w-[70%]">
-        {/* Video Player */}
+        
+        {/* Video Player Wrapper */}
         <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-lg border border-[#303030]">
-          <video 
-            src={video.videoUrl} 
-            controls 
-            className="w-full h-full object-contain"
-            poster={video.thumbnailUrl}
-            autoPlay
-          >
-            Your browser does not support the video tag.
-          </video>
+          <Plyr 
+            source={plyrSource} 
+            options={plyrOptions} 
+          />
         </div>
 
+        {/* Video Title */}
         <h1 className="text-xl font-bold mt-4 line-clamp-2">{video.title}</h1>
 
+        {/* Channel Info Row */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mt-4 gap-4">
+            
+            {/* Channel Profile */}
             <div className="flex items-center gap-3">
                 <img 
                     src={video.uploader?.avatar || `https://ui-avatars.com/api/?name=${video.uploader?.username}&background=random`} 
                     alt="Channel" 
-                    className="w-10 h-10 rounded-full bg-gray-600"
+                    className="w-10 h-10 rounded-full bg-gray-600 object-cover"
                     onError={(e) => e.target.src = "https://ui-avatars.com/api/?name=User&background=random"}
                 />
                 <div>
@@ -175,7 +215,7 @@ const VideoDetail = () => {
                 </button>
             </div>
 
-            {/* Like/Dislike Buttons */}
+            {/* Action Buttons (Like/Dislike/Share) */}
             <div className="flex gap-2">
                 <div className="flex items-center bg-[#272727] rounded-full overflow-hidden">
                     <button 
@@ -202,14 +242,17 @@ const VideoDetail = () => {
             </div>
         </div>
 
+        {/* Description Box */}
         <div className="bg-[#272727] p-3 rounded-xl mt-4 text-sm whitespace-pre-wrap">
             <p className="font-bold mb-1">{video.views} views • {new Date(video.createdAt).toLocaleDateString()}</p>
             <p>{video.description}</p>
         </div>
 
+        {/* Comments Section */}
         <CommentList videoId={video._id} />
       </div>
 
+      {/* --- RIGHT COLUMN: Recommendations --- */}
       <div className="w-full lg:w-[30%] flex flex-col gap-4">
         <p className="font-bold text-lg mb-2">Recommended</p>
         {[1, 2, 3, 4, 5].map((_, idx) => (
@@ -225,6 +268,7 @@ const VideoDetail = () => {
              </div>
         ))}
       </div>
+
     </div>
   );
 };
