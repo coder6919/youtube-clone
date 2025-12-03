@@ -7,7 +7,7 @@ import { FaVideo, FaBell, FaUserCircle } from "react-icons/fa";
 
 // Make sure toggleSidebar is destructured here
 const Navbar = ({ toggleSidebar }) => {
-    console.log("Navbar received toggleSidebar prop:", typeof toggleSidebar);
+    // console.log("Navbar received toggleSidebar prop:", typeof toggleSidebar);
     const [searchQuery, setSearchQuery] = useState("");
     const navigate = useNavigate();
 
@@ -32,7 +32,7 @@ const Navbar = ({ toggleSidebar }) => {
                 {/* THE TRIGGER BUTTON */}
                 <button
                     onClick={() => {
-                        console.log("Button element clicked!"); // IMMEDIATE LOG
+                        // console.log("Button element clicked!"); // IMMEDIATE LOG
                         toggleSidebar();
                     }}
                     className="p-2 hover:bg-[#272727] rounded-full cursor-pointer transition-colors"

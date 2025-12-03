@@ -6,7 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar'; // <--- Import Sidebar here
 import Home from './pages/Home';
-// import VideoDetail from './pages/VideoDetail';
+import VideoDetail from './pages/VideoDetail';
 // import Channel from './pages/Channel';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -35,7 +35,7 @@ function App() {
             <Routes>
               {/* Note: We removed the 'sidebarOpen' prop from Home since it doesn't need it anymore */}
               <Route path="/" element={<Home />} />
-              {/* <Route path="/video/:id" element={<VideoDetail />} /> */}
+              <Route path="/video/:id" element={<VideoDetail />} />
               {/* <Route path="/channel/:id" element={<Channel />} /> */}
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
