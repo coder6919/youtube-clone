@@ -1,6 +1,8 @@
 import Video from '../models/video.js';
 import Channel from '../models/channel.js';
 
+import jwt from 'jsonwebtoken';
+
 // @desc    Create a new video
 // @route   POST /api/videos
 // @access  Private
@@ -81,12 +83,26 @@ export const getAllVideos = async (req, res) => {
 // @access  Public
 export const getVideoById = async (req, res) => {
     try {
+        console.log("-----------------------------------------");
+        console.log("1. getVideoById HIT! ID:", req.params.id);
+
+        // Attempt to find the video
+        // Note: We use populate to get the Uploader's info (name/avatar)
         const video = await Video.findById(req.params.id).populate('uploader', 'username avatar subscribers');
 
-        if (!video) return res.status(404).json({ message: "Video not found" });
+        if (!video) {
+            console.log("2. Video NOT FOUND in DB");
+            return res.status(404).json({ message: "Video not found" });
+        }
+        
 
+        // Respond
         res.status(200).json(video);
+        console.log("3. Data sent to frontend");
+        console.log("-----------------------------------------");
+
     } catch (error) {
+        console.error("CRITICAL ERROR in getVideoById:", error);
         res.status(500).json({ message: "Error fetching video", error: error.message });
     }
 };
@@ -149,4 +165,128 @@ export const updateVideo = async (req, res) => {
         console.error("Update failed:", error);
         res.status(500).json({ message: "Update failed", error: error.message });
     }
+};
+
+// @desc    Like a video
+// @route   PUT /api/videos/:id/like
+export const likeVideo = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const videoId = req.params.id;
+
+    // 1. Check if video exists & get current state
+    const video = await Video.findById(videoId);
+    if (!video) return res.status(404).json({ message: "Video not found" });
+
+    // 2. Determine Action
+    // Check if user has already liked the video
+    // We use strict string comparison to be safe
+    const isLiked = video.likes.some(id => id.toString() === userId);
+
+    let updatedVideo;
+
+    if (isLiked) {
+      // Action: UN-LIKE (Remove user from likes)
+      updatedVideo = await Video.findByIdAndUpdate(
+        videoId,
+        { $pull: { likes: userId } }, // Remove ID from likes array
+        { new: true } // Return the updated document
+      );
+    } else {
+      // Action: LIKE (Add to likes, Remove from dislikes)
+      updatedVideo = await Video.findByIdAndUpdate(
+        videoId,
+        { 
+          $addToSet: { likes: userId }, // Add ID to likes (avoid duplicates)
+          $pull: { dislikes: userId }   // Remove ID from dislikes
+        },
+        { new: true }
+      );
+    }
+
+    res.status(200).json(updatedVideo);
+  } catch (error) {
+    console.error("LIKE ERROR:", error);
+    res.status(500).json({ message: "Failed to like video", error: error.message });
+  }
+};
+
+// @desc    Dislike a video
+// @route   PUT /api/videos/:id/dislike
+export const dislikeVideo = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const videoId = req.params.id;
+
+    const video = await Video.findById(videoId);
+    if (!video) return res.status(404).json({ message: "Video not found" });
+
+    const isDisliked = video.dislikes.some(id => id.toString() === userId);
+
+    let updatedVideo;
+
+    if (isDisliked) {
+      // Action: UN-DISLIKE (Remove user from dislikes)
+      updatedVideo = await Video.findByIdAndUpdate(
+        videoId,
+        { $pull: { dislikes: userId } },
+        { new: true }
+      );
+    } else {
+      // Action: DISLIKE (Add to dislikes, Remove from likes)
+      updatedVideo = await Video.findByIdAndUpdate(
+        videoId,
+        { 
+          $addToSet: { dislikes: userId },
+          $pull: { likes: userId }
+        },
+        { new: true }
+      );
+    }
+
+    res.status(200).json(updatedVideo);
+  } catch (error) {
+    console.error("DISLIKE ERROR:", error);
+    res.status(500).json({ message: "Failed to dislike video", error: error.message });
+  }
+};
+
+// @desc    Increment view count (Unique per user OR IP)
+// @route   PUT /api/videos/:id/view
+export const addView = async (req, res) => {
+  try {
+    const videoId = req.params.id;
+    let viewer = req.ip; // Default to IP for guests
+
+    // --- MANUAL TOKEN CHECK ---
+    // Even though this route is public, we check if a token exists
+    // so we can track logged-in users by their ID instead of IP.
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      try {
+        const token = req.headers.authorization.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        viewer = decoded.id; // Use User ID if available
+      } catch (error) {
+        // Token invalid/expired? Just stick with IP.
+      }
+    }
+    // --------------------------
+
+    const updatedVideo = await Video.findByIdAndUpdate(
+      videoId,
+      { $addToSet: { viewedBy: viewer } },
+      { new: true }
+    );
+
+    if (!updatedVideo) return res.status(404).json({ message: "Video not found" });
+
+    // Sync the number
+    updatedVideo.views = updatedVideo.viewedBy.length;
+    await updatedVideo.save();
+
+    res.status(200).json(updatedVideo);
+  } catch (error) {
+    console.error("View Error:", error);
+    res.status(500).json({ message: "Failed to count view" });
+  }
 };
