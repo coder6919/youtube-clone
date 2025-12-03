@@ -1,7 +1,7 @@
 # ⚙️ YouTube Clone - Backend
 
 The server-side application built with Node.js and Express. It handles data persistence via MongoDB, file storage via Cloudinary, and authentication via JWT.
-```
+
 # 📦 Core Dependencies
 
 ### express
@@ -27,7 +27,7 @@ Hashes user passwords for security.
 
 ### cors
 Allows the frontend (running on a different port) to communicate with the API.
-```
+
 # 🗂️ Folder Structure
 ```
 backend/
