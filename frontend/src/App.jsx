@@ -4,7 +4,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import Navbar from './components/Navbar';
-import Sidebar from './components/Sidebar'; // <--- Import Sidebar here
+import Sidebar from './components/Sidebar';
 import Home from './pages/Home';
 import VideoDetail from './pages/VideoDetail';
 import Channel from './pages/Channel';
@@ -21,7 +21,7 @@ function App() {
 
   return (
     <Router>
-      <div className="flex flex-col h-screen overflow-hidden bg-[#0F0F0F] text-white">
+      <div className="flex flex-col h-screen h-[100dvh] overflow-hidden bg-[#0F0F0F] text-white">
         {/* 1. Navbar stays at the top */}
         <Navbar toggleSidebar={toggleSidebar} />
         
@@ -34,7 +34,7 @@ function App() {
           {/* Main Content Area (Routes) */}
           <main className="flex-1 overflow-y-auto w-full">
             <Routes>
-              {/* Note: We removed the 'sidebarOpen' prop from Home since it doesn't need it anymore */}
+              {/* We removed the 'sidebarOpen' prop from Home since it doesn't need it anymore */}
               <Route path="/" element={<Home />} />
               <Route path="/video/:id" element={<VideoDetail />} />
               <Route path="/channel/:id" element={<Channel />} />

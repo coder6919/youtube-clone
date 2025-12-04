@@ -8,7 +8,7 @@ import { FaUserCircle } from "react-icons/fa";
 const Sidebar = ({ isOpen }) => {
   const mainLinks = [
     { icon: <GoHome size={24} />, name: "Home", link: "/" },
-    { icon: <SiYoutubeshorts size={24} />, name: "Shorts", link: "/" },
+    { icon: <SiYoutubeshorts size={24} />, name: "Shorts", link: "/" }, // Shorts link to home for now
     { icon: <MdOutlineSubscriptions size={24} />, name: "Subscriptions", link: "/" },
   ];
 
@@ -19,10 +19,14 @@ const Sidebar = ({ isOpen }) => {
   ];
 
   return (
+    // CONTAINER:
+    // Mobile: 'fixed' (floats on top), z-40 (above content), full height
+    // Desktop (sm:): 'static' (sits next to content), normal height
     <div 
-      className={`bg-[#0F0F0F] h-[calc(100vh-60px)] overflow-y-auto sticky top-[60px] left-0 pb-4 flex flex-col 
-      transition-all duration-200 ease-in-out border-r border-[#303030] shrink-0 overflow-hidden 
-      ${isOpen ? "w-[240px] px-3" : "w-[72px] px-1 items-center"}`} 
+      className={`bg-[#0F0F0F] overflow-y-auto transition-all duration-200 ease-in-out border-r border-[#303030]
+      fixed top-14 left-0 h-[calc(100vh-56px)] z-40 
+      sm:static sm:h-full
+      ${isOpen ? "w-[240px] px-3 translate-x-0" : "w-[0px] sm:w-[72px] px-0 sm:px-1 -translate-x-full sm:translate-x-0"}`} 
     >
       {/* Section 1: Main Links */}
       <div className="flex flex-col w-full py-3 gap-1">
@@ -33,22 +37,20 @@ const Sidebar = ({ isOpen }) => {
           >
             <div>{item.icon}</div>
             
-            {/* If OPEN: Show text normally */}
-            {/* whitespace-nowrap prevents text from breaking layout while closing */}
+            {/* Logic: Show text if Open. On Desktop collapsed, show tiny text. */}
             <span className={`text-sm font-normal truncate whitespace-nowrap ${!isOpen && "hidden"}`}>
                 {item.name}
             </span>
-            
-            {/* If CLOSED: Show tiny text below icon */}
-            {!isOpen && <span className="text-[10px]">{item.name}</span>}
+            <span className={`text-[10px] ${isOpen ? "hidden" : "hidden sm:block"}`}>
+                {item.name}
+            </span>
           </Link>
         ))}
       </div>
 
-      {/* Separator - Only show when open or if you want a line in collapsed mode too */}
       {isOpen && <div className="border-t border-[#303030] my-2 w-full"></div>}
 
-      {/* Section 2: Secondary Links (Only visible when Open) */}
+      {/* Section 2: Only show when fully open */}
       <div className={`flex flex-col w-full py-3 ${!isOpen && "hidden"}`}>
             <h3 className="px-3 mb-2 text-base font-bold flex items-center gap-2 whitespace-nowrap">You {">"}</h3>
             {secondaryLinks.map((item, index) => (
@@ -59,7 +61,7 @@ const Sidebar = ({ isOpen }) => {
             ))}
       </div>
 
-      {/* Sign In Prompt (Only visible when Open) */}
+      {/* Sign In Prompt */}
       <div className={`border-t border-[#303030] my-2 pt-4 px-3 text-sm text-gray-400 ${!isOpen && "hidden"}`}>
             <p>Sign in to like videos, comment, and subscribe.</p>
             <Link to="/login">
