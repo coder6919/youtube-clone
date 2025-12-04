@@ -13,8 +13,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 
 function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 640);
   const toggleSidebar = () => {
     setSidebarOpen(prev => !prev);
   };
