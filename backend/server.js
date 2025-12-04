@@ -18,7 +18,13 @@ connectDB();
 const app = express();
 
 //middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:5173", // Keep this for local development
+    "https://YOUR-NETLIFY-APP-NAME.netlify.app" // <--- ADD YOUR NETLIFY URL HERE
+  ],
+  credentials: true
+}));
 app.use(express.json())
 
 
