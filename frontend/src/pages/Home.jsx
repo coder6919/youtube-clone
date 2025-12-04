@@ -17,7 +17,7 @@ const Home = () => {
   const searchQuery = searchParams.get("search"); 
 
   const categories = [
-    "All", "Music", "Gaming", "News", "Movies", "Education", "Live", "Sports", "Fashion"
+    "All", "Music", "Gaming", "News", "Movies", "Education", "Live", "Sports", "Fashion", "Tech"
   ];
 
   // --- FETCHING LOGIC ---
