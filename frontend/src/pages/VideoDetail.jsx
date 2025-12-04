@@ -207,8 +207,8 @@ const VideoDetail = () => {
                     onError={(e) => e.target.src = "https://ui-avatars.com/api/?name=User&background=random"}
                 />
                 <div>
-                    <h3 className="font-bold text-base">{video.uploader?.username || "Unknown Channel"}</h3>
-                    <p className="text-xs text-gray-400">1.2M subscribers</p>
+                    <h3 className="font-bold text-base">{video.channelId?.channelName || video.uploader?.username}</h3>
+                    <p className="text-xs text-gray-400">{video.channelId?.subscribers || 0} subscribers</p>
                 </div>
                 <button className="ml-4 bg-white text-black px-4 py-2 rounded-full font-medium text-sm hover:bg-gray-200 cursor-pointer">
                     Subscribe

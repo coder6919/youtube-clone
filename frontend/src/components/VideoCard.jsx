@@ -39,7 +39,7 @@ const VideoCard = ({ video }) => {
             {video.title}
           </h3>
           <p className="text-gray-400 text-sm mt-1 hover:text-white transition-colors">
-            {video.uploader?.username || "Unknown Channel"}
+            {video.channelId?.channelName || video.uploader?.username || "Unknown Channel"}
           </p>
           <div className="text-gray-400 text-sm flex items-center">
             <span>{video.views} views</span>
