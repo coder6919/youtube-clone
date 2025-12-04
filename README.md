@@ -2,6 +2,8 @@
 
 A robust, full-stack video streaming application built with the MERN Stack (MongoDB, Express, React, Node.js). This project replicates core YouTube functionality, including video uploading via Cloudinary, a custom video player using Plyr, channel management, and real-time social interactions.
 
+GitHub - [https://github.com/coder6919/youtube-clone]
+
 # 🚀 Key Features
 
 Responsive UI: Mobile-first design using Tailwind CSS, featuring a toggleable sidebar and adaptive video grids.
@@ -89,4 +91,4 @@ CLOUDINARY_API_SECRET=<your_api_secret>
 
 # 🎥 Demo
 
-(Add a link to your screen recording here, e.g., Google Drive or YouTube Unlisted link)
+[https://drive.google.com/drive/folders/1PHg4GSdIIZIPl9xISrrDLgKu4aDISBKv?usp=drive_link]

@@ -77,23 +77,19 @@ export const getAllVideos = async (req, res) => {
 // @route   GET /api/videos/find/:id
 export const getVideoById = async (req, res) => {
   try {
-    // 1. Log for debugging
-    console.log("1. getVideoById HIT! ID:", req.params.id);
-
-    // 2. Fetch Video and Populate Dependencies
+    // Fetch Video and Populate Dependencies
     // We populate 'uploader' (User) AND 'channelId' (Channel info)
     const video = await Video.findById(req.params.id)
       .populate('uploader', 'username avatar') // Get User Avatar
       .populate('channelId', 'channelName subscribers'); // Get Channel Name & Subs
 
-    // 3. Check if video exists
+    // Check if video exists
     if (!video) {
-      console.log("2. Video NOT FOUND");
       return res.status(404).json({ message: "Video not found" });
     }
 
-    // 4. Success Response
-    console.log("2. Video FOUND:", video.title);
+    // Success Response
+ 
     res.status(200).json(video);
 
   } catch (error) {
