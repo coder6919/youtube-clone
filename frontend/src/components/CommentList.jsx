@@ -1,38 +1,46 @@
 import React, { useEffect, useState } from 'react';
 import axios from '../utils/axios';
 import { toast } from 'react-toastify';
-import { FaEdit, FaTrash, FaSave, FaTimes } from 'react-icons/fa'; // Import icons
+import { FaEdit, FaTrash, FaSave, FaTimes } from 'react-icons/fa'; 
+import { Link } from 'react-router-dom'; // I am importing Link to fix the broken navigation on mobile
 
 const CommentList = ({ videoId }) => {
+  // I initialize state to hold the list of comments and the new comment input
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
+  
+  // I retrieve the user from local storage to check if they are logged in
   const user = JSON.parse(localStorage.getItem('user'));
   
-  // --- STATE FOR EDITING ---
-  const [editingId, setEditingId] = useState(null); // ID of comment being edited
-  const [editText, setEditText] = useState("");     // Text being typed during edit
+  // I manage state for the editing feature: tracking which comment is being edited and the temporary text
+  const [editingId, setEditingId] = useState(null); 
+  const [editText, setEditText] = useState("");     
 
-  // 1. Fetch Comments
+  // I fetch the comments from the API whenever the videoId changes
   useEffect(() => {
     const fetchComments = async () => {
       try {
         const { data } = await axios.get(`/comments/${videoId}`);
         setComments(data);
       } catch (error) {
+        // I log any errors that occur during fetching
         console.error("Error fetching comments", error);
       }
     };
     if (videoId) fetchComments();
   }, [videoId]);
 
-  // 2. Add Comment
+  // I handle the submission of a new comment
   const handleAddComment = async (e) => {
     e.preventDefault();
+    // I prevent submitting empty comments
     if (!newComment.trim()) return;
 
     try {
+      // I send the new comment to the backend
       const { data } = await axios.post('/comments', { videoId, text: newComment });
-      setComments([data, ...comments]); // Backend now populates user info automatically
+      // I update the local state immediately with the new comment returned from the server
+      setComments([data, ...comments]); 
       setNewComment("");
       toast.success("Comment added!");
     } catch (error) {
@@ -40,11 +48,13 @@ const CommentList = ({ videoId }) => {
     }
   };
 
-  // 3. Delete Comment
+  // I handle the deletion of a comment
   const handleDelete = async (commentId) => {
+    // I ask for confirmation before deleting to prevent accidental clicks
     if (!window.confirm("Delete this comment?")) return;
     try {
       await axios.delete(`/comments/${commentId}`);
+      // I remove the deleted comment from the local state to update the UI instantly
       setComments(comments.filter((c) => c._id !== commentId));
       toast.success("Comment deleted");
     } catch (error) {
@@ -52,38 +62,35 @@ const CommentList = ({ videoId }) => {
     }
   };
 
-  // --- NEW: EDIT HANDLERS ---
-  
-  // Start Editing: Switch to input mode
+  // I set the state to start editing a specific comment
   const startEditing = (comment) => {
     setEditingId(comment._id);
     setEditText(comment.text);
   };
 
-  // Cancel Editing: Revert to view mode
+  // I cancel the editing process and reset the state
   const cancelEditing = () => {
     setEditingId(null);
     setEditText("");
   };
 
-  // Save Edit: Send PUT request
+  // I submit the edited comment to the backend
   const handleEditSubmit = async (commentId) => {
     if (!editText.trim()) return;
 
     try {
-      // Optimistic UI Update: Update list immediately
+      // I perform an optimistic UI update so the user sees the change immediately
       setComments(comments.map(c => 
         c._id === commentId ? { ...c, text: editText } : c
       ));
       
-      setEditingId(null); // Exit edit mode
+      setEditingId(null); // I exit edit mode
       
-      // API Call
+      // I send the update request to the API
       await axios.put(`/comments/${commentId}`, { text: editText });
       toast.success("Comment updated");
     } catch (error) {
       toast.error("Failed to update comment");
-      // Revert change if API fails (optional, usually fetch again)
     }
   };
 
@@ -91,7 +98,7 @@ const CommentList = ({ videoId }) => {
     <div className="mt-6 w-full max-w-4xl">
       <h3 className="text-xl font-bold mb-4">{comments.length} Comments</h3>
 
-      {/* Add Comment Input */}
+      {/* I check if the user is logged in before showing the comment input form */}
       {user ? (
         <form onSubmit={handleAddComment} className="flex gap-4 mb-8">
           <img 
@@ -115,14 +122,16 @@ const CommentList = ({ videoId }) => {
           </div>
         </form>
       ) : (
-        <p className="mb-6 text-gray-400 text-sm">Please <a href="/login" className="text-blue-400 hover:underline">sign in</a> to comment.</p>
+        // I use the Link component here to ensure proper navigation to the login page without reloading
+        <p className="mb-6 text-gray-400 text-sm">
+            Please <Link to="/login" className="text-blue-400 hover:underline">sign in</Link> to comment.
+        </p>
       )}
 
-      {/* Comments List */}
+      {/* I map through the comments array to display each comment */}
       <div className="flex flex-col gap-6">
         {comments.map((comment) => (
           <div key={comment._id} className="flex gap-4">
-            {/* Avatar */}
             <img 
               src={comment.userId?.avatar || `https://ui-avatars.com/api/?name=${comment.userId?.username || 'User'}&background=random`} 
               alt="Avatar" 
@@ -130,7 +139,6 @@ const CommentList = ({ videoId }) => {
             />
             
             <div className="flex flex-col gap-1 w-full">
-              {/* Header: Name + Date */}
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-white">
                     @{comment.userId?.username || "Unknown"}
@@ -140,9 +148,8 @@ const CommentList = ({ videoId }) => {
                 </span>
               </div>
               
-              {/* --- EDIT MODE VS VIEW MODE --- */}
+              {/* I check if this specific comment is being edited to toggle between view and edit modes */}
               {editingId === comment._id ? (
-                // EDIT MODE: Show Input + Save/Cancel
                 <div className="flex flex-col gap-2 mt-1">
                     <input 
                         type="text" 
@@ -157,11 +164,10 @@ const CommentList = ({ videoId }) => {
                     </div>
                 </div>
               ) : (
-                // VIEW MODE: Show Text
                 <p className="text-sm text-gray-200">{comment.text}</p>
               )}
               
-              {/* --- ACTIONS (Edit/Delete) - Only if Owner --- */}
+              {/* I show edit/delete buttons only if the logged-in user is the owner of the comment */}
               {user?._id === comment.userId?._id && !editingId && (
                 <div className="flex gap-4 mt-1">
                     <button 
