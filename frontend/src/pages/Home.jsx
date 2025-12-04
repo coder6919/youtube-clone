@@ -49,6 +49,15 @@ const Home = () => {
     fetchVideos();
   }, [category, searchQuery]); 
 
+  if (error) {
+  return (
+    <div className="text-center mt-10 text-red-500">
+      <p>Error: {error}</p>
+      <p className="text-sm text-gray-400 mt-2">Check console or network connection.</p>
+    </div>
+  );
+}
+
   // --- CATEGORY CLICK HANDLER ---
   const handleCategoryClick = (cat) => {
     setCategory(cat); 
@@ -60,12 +69,7 @@ const Home = () => {
 
   return (
     <div className="w-full h-full">
-
-      <div className="text-center mt-10 text-red-500">
-      <p>Error: {error}</p>
-      <p className="text-sm text-gray-400 mt-2">Check console or network connection.</p>
-    </div>
-      
+     
       {/* --- CATEGORY FILTERS --- */}
       <div className="sticky top-0 bg-[#0F0F0F] z-10 pb-3 pt-2 px-4 flex gap-3 overflow-x-auto no-scrollbar w-full border-b border-[#272727]">
         {categories.map((cat) => (
