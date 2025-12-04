@@ -8,7 +8,7 @@ const Home = () => {
   const [videos, setVideos] = useState([]);      
   const [loading, setLoading] = useState(true);  
   const [category, setCategory] = useState("All"); 
-  const [error,QXError] = useState(null);
+  const [error,setError] = useState(null);
 
   // --- ROUTER HOOKS ---
   const [searchParams] = useSearchParams();
