@@ -8,6 +8,7 @@ const Home = () => {
   const [videos, setVideos] = useState([]);      
   const [loading, setLoading] = useState(true);  
   const [category, setCategory] = useState("All"); 
+  const [error,QXError] = useState(null);
 
   // --- ROUTER HOOKS ---
   const [searchParams] = useSearchParams();
@@ -23,7 +24,8 @@ const Home = () => {
   // --- FETCHING LOGIC ---
   useEffect(() => {
     const fetchVideos = async () => {
-      setLoading(true); 
+      setLoading(true);
+      setError(null); 
       try {
         let url = `/videos`;
         
@@ -38,6 +40,7 @@ const Home = () => {
         setVideos(data);
       } catch (error) {
         console.error("Error fetching videos:", error);
+        setError(error.message || "Failed to load videos");
       } finally {
         setLoading(false);
       }
@@ -57,6 +60,11 @@ const Home = () => {
 
   return (
     <div className="w-full h-full">
+
+      <div className="text-center mt-10 text-red-500">
+      <p>Error: {error}</p>
+      <p className="text-sm text-gray-400 mt-2">Check console or network connection.</p>
+    </div>
       
       {/* --- CATEGORY FILTERS --- */}
       <div className="sticky top-0 bg-[#0F0F0F] z-10 pb-3 pt-2 px-4 flex gap-3 overflow-x-auto no-scrollbar w-full border-b border-[#272727]">
