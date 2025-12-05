@@ -76,7 +76,17 @@ export const login = async (req, res) => {
             .json({
                 user: userData,
             });
-            } catch (error) {
-                res.status(500).json({ message: 'Server error', error: error.message });
-            }
-    };
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+export const logout = (req, res) => {
+    res
+        .clearCookie("access_token", {
+            sameSite: "none",
+            secure: true
+        })
+        .status(200)
+        .json({ message: "User has been logged out." });
+};
