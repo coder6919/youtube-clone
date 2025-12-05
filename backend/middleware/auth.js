@@ -1,27 +1,24 @@
 import jwt from 'jsonwebtoken';
 
-// this function checks if the user is logged in
-export const protect = async (req, res, next)=>{
-    try{
-        // 1 get the token from the header (Authorization: "Beaer <token>")
-        const token = req.headers.authorization?.split(" ")[1];
+export const protect = async (req, res, next) => {
+    try {
+        
+        // 1. Get the token from the HTTP-Only Cookie
+        // Note: 'access_token' must match the name we used in the login controller
+        const token = req.cookies.access_token;
 
-        // 2 If no token exists, stop the request
-        if(!token){
-            return res.status(401).json({message: "Not auhtorized, no token"});
-
+        // 2. Check if token exists
+        if (!token) {
+            return res.status(401).json({ message: "Not authorized, no token" });
         }
 
-        // 3 Verify the token using our secret key
+        // 3. Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // 4 Attach the user ID to the request object so we know WHO is logged in
-        // We now access `req.user.id in any protected route
+        // 4. Attach user
         req.user = decoded;
-
-        // 5 Move to next function (the controller)
-        next(); 
-    } catch(error){
-        res.status(401).json({message: "Token not valid"})
+        next();
+    } catch (error) {
+        return res.status(401).json({ message: "Token not valid" });
     }
 }

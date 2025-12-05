@@ -2,6 +2,8 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import path from 'path'
+import cookieParser from 'cookie-parser';
+
 import connectDB from './config/db.js';
 import authRoutes from './routes/auth.js'
 import videoRoutes from './routes/videos.js';
@@ -21,10 +23,12 @@ const app = express();
 app.use(cors({
   origin: [
     "http://localhost:5173", // Keep this for local development
-    "https://youtube-clone-619.netlify.app" // <--- ADD YOUR NETLIFY URL HERE
+    "https://youtube-clone-619.netlify.app" // <--- NETLIFY URL HERE
   ],
   credentials: true
 }));
+
+app.use(cookieParser());
 app.use(express.json())
 
 
