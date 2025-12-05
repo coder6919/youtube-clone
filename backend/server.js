@@ -23,7 +23,7 @@ const app = express();
 app.use(cors({
   origin: [
     "http://localhost:5173", // Keep this for local development
-    "https://youtube-clone-619.netlify.app" // <--- NETLIFY URL HERE
+    "https://youtube-clone-619.netlify.app" //  <--- NETLIFY URL HERE
   ],
   credentials: true
 }));
