@@ -10,29 +10,26 @@ import { HiDownload } from "react-icons/hi";
 
 // --- VIDEO PLAYER (PLYR) ---
 import Plyr from "plyr-react";
-import "plyr-react/plyr.css"; // Import default styles
+import "plyr-react/plyr.css"; 
+
+// --- REDUX IMPORT ---
+import { useSelector } from 'react-redux';
 
 const VideoDetail = () => {
-  // 1. URL Params: Get the Video ID from the browser URL (e.g. /video/65a...)
   const { id } = useParams();
 
-  // 2. Data State: Stores the video object fetched from backend
   const [video, setVideo] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 3. User State: Memoized to prevent infinite re-renders in useEffect
-  const user = useMemo(() => {
-    return JSON.parse(localStorage.getItem('user'));
-  }, []); 
+  // --- REDUX STATE ---
+  // Get currentUser from Redux instead of localStorage
+  const { currentUser } = useSelector(state => state.user);
 
-  // 4. Interaction State: Tracks likes/dislikes locally for instant UI updates
   const [likeCount, setLikeCount] = useState(0);
   const [dislikeCount, setDislikeCount] = useState(0);
   const [userLiked, setUserLiked] = useState(false);
   const [userDisliked, setUserDisliked] = useState(false);
 
-  // --- HELPER: OPTIMIZE CLOUDINARY URL ---
-  // Transforms the raw URL to use Cloudinary's auto-format and auto-quality
   const getOptimizedUrl = (url) => {
     if (!url) return "";
     return url.includes("/upload/") 
@@ -40,12 +37,8 @@ const VideoDetail = () => {
       : url;
   };
 
-  // --- PLYR CONFIGURATION (MEMOIZED) ---
-  // We freeze these settings so the player doesn't reload when you click "Like"
-  
-  // A. Source: The video file and thumbnail
   const plyrSource = useMemo(() => {
-    if (!video) return null; // Safety check
+    if (!video) return null; 
     return {
       type: "video",
       sources: [
@@ -54,11 +47,10 @@ const VideoDetail = () => {
           type: "video/mp4",
         },
       ],
-      poster: video.thumbnailUrl, // Thumbnail image
+      poster: video.thumbnailUrl, 
     };
-  }, [video?.videoUrl, video?.thumbnailUrl]); // Only update if video URL changes
+  }, [video?.videoUrl, video?.thumbnailUrl]); 
 
-  // B. Options: Controls, Speed, Autoplay
   const plyrOptions = useMemo(() => ({
     autoplay: true,
     controls: [
@@ -68,22 +60,20 @@ const VideoDetail = () => {
     speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
   }), []);
 
-  // --- EFFECTS (DATA FETCHING) ---
-
-  // 1. Fetch Video Data
+  // --- FETCH VIDEO DATA ---
   useEffect(() => {
     const fetchVideo = async () => {
       try {
-        // Use the specific '/find/' route to avoid router conflicts
         const { data } = await axios.get(`/videos/find/${id}`);
         setVideo(data);
         
-        // Sync local state with fetched data
         setLikeCount(data.likes.length);
         setDislikeCount(data.dislikes.length);
-        if (user) {
-          setUserLiked(data.likes.includes(user._id));
-          setUserDisliked(data.dislikes.includes(user._id));
+        
+        // Use currentUser to check likes
+        if (currentUser) {
+          setUserLiked(data.likes.includes(currentUser._id));
+          setUserDisliked(data.dislikes.includes(currentUser._id));
         }
       } catch (error) {
         console.error("Error fetching video", error);
@@ -93,36 +83,31 @@ const VideoDetail = () => {
       }
     };
     fetchVideo();
-  }, [id, user]);
+  }, [id, currentUser]); // Added currentUser as dependency
 
-  // 2. Increment View Count (Once per page load)
+  // --- INCREMENT VIEWS ---
   useEffect(() => {
     const triggerView = async () => {
       try {
-        // Call API to increment view
         const { data } = await axios.put(`/videos/${id}/view`);
-        // Update local state views immediately
         setVideo((prev) => prev ? { ...prev, views: data.views } : prev);
       } catch (error) {
         console.error("View count failed", error);
       }
     };
 
-    // Small delay ensures strict mode doesn't double-count locally
     const timer = setTimeout(() => triggerView(), 1000);
     return () => clearTimeout(timer);
   }, [id]);
 
-  // --- ACTION HANDLERS (OPTIMISTIC UI) ---
+  // --- HANDLERS ---
 
   const handleLike = async () => {
-    if (!user) return toast.error("Please login to like");
+    if (!currentUser) return toast.error("Please login to like");
 
-    // Snapshot state for rollback
     const prevLiked = userLiked;
     const prevCount = likeCount;
 
-    // Optimistic Update: Update UI instantly
     if (userLiked) {
       setUserLiked(false);
       setLikeCount(prev => prev - 1);
@@ -135,11 +120,9 @@ const VideoDetail = () => {
       }
     }
 
-    // API Call
     try {
       await axios.put(`/videos/${id}/like`);
     } catch (error) {
-      // Revert on failure
       setUserLiked(prevLiked);
       setLikeCount(prevCount);
       toast.error("Failed to like");
@@ -147,7 +130,7 @@ const VideoDetail = () => {
   };
 
   const handleDislike = async () => {
-    if (!user) return toast.error("Please login to dislike");
+    if (!currentUser) return toast.error("Please login to dislike");
 
     const prevDisliked = userDisliked;
     const prevCount = dislikeCount;
@@ -173,32 +156,21 @@ const VideoDetail = () => {
     }
   };
 
-  // --- RENDER ---
-
   if (loading) return <div className="text-white text-center mt-20">Loading...</div>;
   if (!video) return <div className="text-white text-center mt-20">Video not found.</div>;
 
   return (
     <div className="w-full bg-[#0F0F0F] text-white p-4 md:p-6 flex flex-col lg:flex-row gap-6">
 
-      {/* --- LEFT COLUMN: Player, Info, Comments --- */}
       <div className="w-full lg:w-[70%]">
-        
-        {/* Video Player Wrapper */}
         <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-lg border border-[#303030]">
-          <Plyr 
-            source={plyrSource} 
-            options={plyrOptions} 
-          />
+          <Plyr source={plyrSource} options={plyrOptions} />
         </div>
 
-        {/* Video Title */}
         <h1 className="text-xl font-bold mt-4 line-clamp-2">{video.title}</h1>
 
-        {/* Channel Info Row */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mt-4 gap-4">
             
-            {/* Channel Profile */}
             <div className="flex items-center gap-3">
                 <img 
                     src={video.uploader?.avatar || `https://ui-avatars.com/api/?name=${video.uploader?.username}&background=random`} 
@@ -215,7 +187,6 @@ const VideoDetail = () => {
                 </button>
             </div>
 
-            {/* Action Buttons (Like/Dislike/Share) */}
             <div className="flex gap-2">
                 <div className="flex items-center bg-[#272727] rounded-full overflow-hidden">
                     <button 
@@ -242,17 +213,14 @@ const VideoDetail = () => {
             </div>
         </div>
 
-        {/* Description Box */}
         <div className="bg-[#272727] p-3 rounded-xl mt-4 text-sm whitespace-pre-wrap">
             <p className="font-bold mb-1">{video.views} views • {new Date(video.createdAt).toLocaleDateString()}</p>
             <p>{video.description}</p>
         </div>
 
-        {/* Comments Section */}
         <CommentList videoId={video._id} />
       </div>
 
-      {/* --- RIGHT COLUMN: Recommendations --- */}
       <div className="w-full lg:w-[30%] flex flex-col gap-4">
         <p className="font-bold text-lg mb-2">Recommended</p>
         {[1, 2, 3, 4, 5].map((_, idx) => (

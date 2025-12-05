@@ -3,6 +3,7 @@ import axios from '../utils/axios';
 import { toast } from 'react-toastify';
 import { FaEdit, FaTrash, FaSave, FaTimes } from 'react-icons/fa'; 
 import { Link } from 'react-router-dom'; // I am importing Link to fix the broken navigation on mobile
+import { useSelector } from 'react-redux';
 
 const CommentList = ({ videoId }) => {
   // I initialize state to hold the list of comments and the new comment input
@@ -10,8 +11,7 @@ const CommentList = ({ videoId }) => {
   const [newComment, setNewComment] = useState("");
   
   // I retrieve the user from local storage to check if they are logged in
-  const user = JSON.parse(localStorage.getItem('user'));
-  
+  const { currentUser } = useSelector(state => state.user);  
   // I manage state for the editing feature: tracking which comment is being edited and the temporary text
   const [editingId, setEditingId] = useState(null); 
   const [editText, setEditText] = useState("");     
@@ -99,10 +99,10 @@ const CommentList = ({ videoId }) => {
       <h3 className="text-xl font-bold mb-4">{comments.length} Comments</h3>
 
       {/* I check if the user is logged in before showing the comment input form */}
-      {user ? (
+      {currentUser ? (
         <form onSubmit={handleAddComment} className="flex gap-4 mb-8">
           <img 
-            src={user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=random`} 
+            src={currentUser.avatar || `https://ui-avatars.com/api/?name=${currentUser.username}&background=random`} 
             alt="User" 
             className="w-10 h-10 rounded-full object-cover" 
           />
@@ -168,7 +168,7 @@ const CommentList = ({ videoId }) => {
               )}
               
               {/* I show edit/delete buttons only if the logged-in user is the owner of the comment */}
-              {user?._id === comment.userId?._id && !editingId && (
+              {currentUser?._id === comment.userId?._id && !editingId && (
                 <div className="flex gap-4 mt-1">
                     <button 
                       onClick={() => startEditing(comment)}

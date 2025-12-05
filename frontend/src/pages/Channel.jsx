@@ -3,92 +3,66 @@ import { useParams } from 'react-router-dom';
 import axios from '../utils/axios';
 import VideoCard from '../components/VideoCard';
 import { toast } from 'react-toastify';
-// Import Icons for UI elements
 import { FaUpload, FaTrash, FaTimes, FaEdit, FaCamera, FaPen } from 'react-icons/fa';
 
+// --- REDUX IMPORT ---
+import { useSelector } from 'react-redux';
+
 const Channel = () => {
-    // -------------------------------------------------------------------------
-    // 1. INITIALIZATION & STATE
-    // -------------------------------------------------------------------------
-    
-    // Get the Channel ID from the URL parameter (e.g. /channel/12345)
     const { id } = useParams();
 
-    // Data State: Holds the channel details and the list of videos
     const [channel, setChannel] = useState(null);
     const [videos, setVideos] = useState([]);
-    const [loading, setLoading] = useState(true); // Loading spinner state
+    const [loading, setLoading] = useState(true); 
 
-    // User Auth: Get logged-in user from local storage to check ownership rights
-    const user = JSON.parse(localStorage.getItem('user'));
+    // --- REDUX STATE ---
+    const { currentUser } = useSelector(state => state.user);
 
-    // UI State: Toggles for Modals and Edit Modes
-    const [showModal, setShowModal] = useState(false);         // Upload/Edit Video Modal
-    const [showChannelModal, setShowChannelModal] = useState(false); // Edit Channel Info Modal
-    const [manageMode, setManageMode] = useState(false);       // "Manage Videos" overlay toggle
-    const [isEditing, setIsEditing] = useState(false);         // Create vs Edit mode tracker
-    const [editVideoId, setEditVideoId] = useState(null);      // ID of video being edited
-    const [uploading, setUploading] = useState(false);         // File upload loading state
+    const [showModal, setShowModal] = useState(false);
+    const [showChannelModal, setShowChannelModal] = useState(false);
+    const [manageMode, setManageMode] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editVideoId, setEditVideoId] = useState(null);
+    const [uploading, setUploading] = useState(false);
 
-    // Form State: Video (Used for both Creating and Editing videos)
     const [videoData, setVideoData] = useState({
         title: "", description: "", thumbnailUrl: "", videoUrl: "", category: "Education"
     });
 
-    // Form State: Channel (Used for editing channel name/description)
     const [channelData, setChannelData] = useState({
         channelName: "", description: ""
     });
 
-    // -------------------------------------------------------------------------
-    // 2. DATA FETCHING
-    // -------------------------------------------------------------------------
-
-    // Fetch Channel Data when the component mounts or ID changes
     useEffect(() => {
         const fetchChannel = async () => {
             try {
-                // API Call: Get channel info
                 const { data } = await axios.get(`/channels/${id}`);
                 setChannel(data);
-                // API returns videos populated inside the channel object
                 setVideos(data.videos || []); 
             } catch (error) {
                 console.error("Error fetching channel:", error);
                 toast.error("Failed to load channel");
             } finally {
-                setLoading(false); // Stop loading spinner
+                setLoading(false); 
             }
         };
         fetchChannel();
     }, [id]);
 
-    // -------------------------------------------------------------------------
-    // 3. ACTION HANDLERS
-    // -------------------------------------------------------------------------
-
-    // --- HELPER: FILE UPLOAD (Video & Thumbnail) ---
-    // Uploads a file to Cloudinary via Backend and sets the returned URL
     const uploadFileHandler = async (e, fieldName) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Create FormData to send binary file
         const formData = new FormData();
         formData.append('file', file);
         
-        setUploading(true); // Start spinner
+        setUploading(true);
 
         try {
             const config = { headers: { 'Content-Type': 'multipart/form-data' } };
-            
-            // 1. Send file to backend -> Cloudinary
             const { data } = await axios.post('/upload', formData, config);
-            
-            // 2. Set the returned Cloudinary URL to the state
             setVideoData({ ...videoData, [fieldName]: data });
-            
-            setUploading(false); // Stop spinner
+            setUploading(false);
         } catch (error) {
             console.error(error);
             setUploading(false);
@@ -96,8 +70,6 @@ const Channel = () => {
         }
     };
 
-    // --- HELPER: BANNER UPLOAD ---
-    // Uploads a new banner image and saves it to the database immediately
     const handleBannerUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -106,15 +78,10 @@ const Channel = () => {
         formData.append('file', file);
 
         try {
-            // 1. Upload to Cloudinary
             const { data: filePath } = await axios.post('/upload', formData, { 
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            
-            // 2. Save new Banner URL to MongoDB
             await axios.put(`/channels/${id}`, { channelBanner: filePath });
-            
-            // 3. Update local state to show new banner instantly
             setChannel(prev => ({ ...prev, channelBanner: filePath }));
             toast.success("Banner updated!");
         } catch (error) {
@@ -122,19 +89,15 @@ const Channel = () => {
         }
     };
 
-    // --- MODAL: OPEN CREATE VIDEO ---
     const openCreateModal = () => {
-        setIsEditing(false); // Set mode to "Create"
-        // Reset form fields
+        setIsEditing(false);
         setVideoData({ title: "", description: "", thumbnailUrl: "", videoUrl: "", category: "Education" });
         setShowModal(true);
     };
 
-    // --- MODAL: OPEN EDIT VIDEO ---
     const openEditModal = (video) => {
-        setIsEditing(true); // Set mode to "Edit"
-        setEditVideoId(video._id); // Track ID
-        // Fill form with existing data
+        setIsEditing(true);
+        setEditVideoId(video._id);
         setVideoData({
             title: video.title,
             description: video.description,
@@ -145,9 +108,7 @@ const Channel = () => {
         setShowModal(true);
     };
 
-    // --- MODAL: OPEN EDIT CHANNEL ---
     const openChannelEdit = () => {
-        // Fill form with existing channel info
         setChannelData({
             channelName: channel.channelName,
             description: channel.description
@@ -155,43 +116,33 @@ const Channel = () => {
         setShowChannelModal(true);
     };
 
-    // --- SUBMIT: VIDEO FORM (Create & Edit) ---
     const handleFormSubmit = async (e) => {
         e.preventDefault();
         try {
             if (isEditing) {
-                // Update Logic (PUT)
                 const { data } = await axios.put(`/videos/${editVideoId}`, videoData);
                 toast.success("Video Updated!");
-                // Update specific video in the list locally
                 setVideos(videos.map(v => v._id === editVideoId ? data : v));
             } else {
-                // Create Logic (POST)
                 const { data } = await axios.post('/videos', videoData);
                 toast.success("Video Uploaded!");
-                // Add new video to the list
                 setVideos([data, ...videos]);
             }
-            setShowModal(false); // Close modal
+            setShowModal(false); 
         } catch (error) {
             toast.error(error.response?.data?.message || "Operation Failed");
         }
     };
 
-    // --- SUBMIT: CHANNEL UPDATE ---
     const handleChannelUpdate = async (e) => {
         e.preventDefault();
         try {
-            // Update Channel Info in DB
             await axios.put(`/channels/${id}`, channelData);
-            
-            // Update local state
             setChannel(prev => ({ 
                 ...prev, 
                 channelName: channelData.channelName, 
                 description: channelData.description 
             }));
-            
             setShowChannelModal(false);
             toast.success("Channel details updated!");
         } catch (error) {
@@ -199,12 +150,10 @@ const Channel = () => {
         }
     };
 
-    // --- ACTION: DELETE VIDEO ---
     const handleDeleteVideo = async (videoId) => {
         if (!window.confirm("Are you sure you want to delete this video?")) return;
         try {
             await axios.delete(`/videos/${videoId}`);
-            // Remove video from local list
             setVideos((prev) => prev.filter(v => v._id !== videoId));
             toast.success("Video deleted");
         } catch (error) {
@@ -212,60 +161,49 @@ const Channel = () => {
         }
     };
 
-    // Helper: Handle text input changes
     const handleChange = (e) => {
         setVideoData({ ...videoData, [e.target.name]: e.target.value });
     };
 
-    // -------------------------------------------------------------------------
-    // 4. RENDER UI
-    // -------------------------------------------------------------------------
-
     if (loading) return <div className="text-white text-center mt-20">Loading...</div>;
     if (!channel) return <div className="text-white text-center mt-20">Channel not found.</div>;
 
-    // Check if the current user is the owner of this channel
-    const isOwner = user?._id === channel.owner;
+    // --- CHECK OWNERSHIP WITH REDUX STATE ---
+    const isOwner = currentUser?._id === channel.owner;
 
     return (
         <div className="w-full min-h-screen bg-[#0F0F0F] text-white">
 
-            {/* --- BANNER SECTION --- */}
+            {/* --- BANNER --- */}
             <div className="w-full h-32 md:h-48 bg-gray-800 relative group">
-                {/* 1A. Display Banner */}
                 {channel.channelBanner ? (
                     <img src={channel.channelBanner} alt="Banner" className="w-full h-full object-cover" />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-500">No Banner</div>
                 )}
                 
-                {/* 1B. Edit Banner Overlay (Owner Only) */}
                 {isOwner && (
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer">
                         <label className="cursor-pointer flex flex-col items-center gap-2 text-white font-bold">
                             <FaCamera size={24} />
                             <span>Change Banner</span>
-                            {/* Hidden File Input */}
                             <input type="file" className="hidden" onChange={handleBannerUpload} />
                         </label>
                     </div>
                 )}
             </div>
 
-            {/* --- HEADER INFO SECTION --- */}
+            {/* --- HEADER --- */}
             <div className="px-4 md:px-12 py-6 flex flex-col md:flex-row items-center md:items-start gap-6 border-b border-[#303030]">
-                {/* 2A. Channel Avatar */}
                 <img 
                     src={channel.owner?.avatar || `https://ui-avatars.com/api/?name=${channel.channelName}&background=random`} 
                     alt="Avatar" 
                     className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-[#0F0F0F] -mt-4 bg-gray-600 object-cover" 
                 />
 
-                {/* 2B. Channel Text Details */}
                 <div className="flex-1 text-center md:text-left group relative">
                     <div className="flex items-center justify-center md:justify-start gap-3">
                         <h1 className="text-3xl font-bold">{channel.channelName}</h1>
-                        {/* Edit Icon for Name/Description (Owner Only) */}
                         {isOwner && (
                             <button 
                                 onClick={openChannelEdit}
@@ -281,7 +219,6 @@ const Channel = () => {
                     <p className="text-gray-300 mt-3 max-w-2xl whitespace-pre-wrap">{channel.description}</p>
                 </div>
 
-                {/* 2C. Action Buttons */}
                 <div className="mt-4 md:mt-0">
                     {isOwner ? (
                         <div className="flex gap-3">
@@ -308,10 +245,8 @@ const Channel = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {videos.map((video) => (
                         <div key={video._id} className="relative group">
-                            {/* Display Video Card */}
                             <VideoCard video={video} />
                             
-                            {/* Manage Overlay (Only if Manage Mode is ON) */}
                             {manageMode && (
                                 <div className="absolute inset-0 bg-black/60 rounded-xl flex items-center justify-center gap-4 z-10 backdrop-blur-sm">
                                     <button onClick={() => openEditModal(video)} className="bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 transform hover:scale-110 transition-all">
@@ -332,91 +267,22 @@ const Channel = () => {
                 <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-50 p-4">
                     <div className="bg-[#1F1F1F] p-6 rounded-xl w-full max-w-lg border border-gray-700 relative max-h-[90vh] overflow-y-auto">
                         <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white">✕</button>
-                        
                         <h2 className="text-xl font-bold mb-6">{isEditing ? "Edit Video" : "Upload Video"}</h2>
-                        
                         <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
-                            {/* Title Input */}
-                            <input 
-                                name="title" 
-                                value={videoData.title} 
-                                placeholder="Video Title" 
-                                onChange={handleChange} 
-                                required 
-                                className="w-full bg-[#0F0F0F] p-3 rounded-lg border border-gray-700 text-white" 
-                            />
-                            
-                            {/* Description Input */}
-                            <textarea 
-                                name="description" 
-                                value={videoData.description} 
-                                placeholder="Description" 
-                                onChange={handleChange} 
-                                required 
-                                className="w-full bg-[#0F0F0F] p-3 rounded-lg border border-gray-700 text-white" 
-                            />
-                            
-                            {/* THUMBNAIL UPLOAD SECTION */}
+                            <input name="title" value={videoData.title} placeholder="Video Title" onChange={handleChange} required className="w-full bg-[#0F0F0F] p-3 rounded-lg border border-gray-700 text-white" />
+                            <textarea name="description" value={videoData.description} placeholder="Description" onChange={handleChange} required className="w-full bg-[#0F0F0F] p-3 rounded-lg border border-gray-700 text-white" />
                             <div className="flex flex-col gap-2">
                                 <label className="text-sm text-gray-400 font-bold uppercase">Thumbnail</label>
-                                {/* Read-only input shows the URL */}
-                                <input
-                                    type="text"
-                                    name="thumbnailUrl"
-                                    value={videoData.thumbnailUrl}
-                                    readOnly
-                                    className="w-full bg-[#0F0F0F] p-2 rounded-lg border border-gray-700 text-gray-500 text-sm"
-                                    placeholder="File URL will appear here"
-                                />
-                                {/* File input */}
-                                <input
-                                    type="file"
-                                    onChange={(e) => uploadFileHandler(e, 'thumbnailUrl')}
-                                    className="block w-full text-sm text-gray-400
-                                        file:mr-4 file:py-2 file:px-4
-                                        file:rounded-full file:border-0
-                                        file:text-sm file:font-semibold
-                                        file:bg-gray-700 file:text-white
-                                        hover:file:bg-gray-600
-                                        cursor-pointer"
-                                />
+                                <input type="text" name="thumbnailUrl" value={videoData.thumbnailUrl} readOnly className="w-full bg-[#0F0F0F] p-2 rounded-lg border border-gray-700 text-gray-500 text-sm" placeholder="File URL will appear here" />
+                                <input type="file" onChange={(e) => uploadFileHandler(e, 'thumbnailUrl')} className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-700 file:text-white hover:file:bg-gray-600 cursor-pointer" />
                             </div>
-                            
-                            {/* VIDEO UPLOAD SECTION */}
                             <div className="flex flex-col gap-2">
                                 <label className="text-sm text-gray-400 font-bold uppercase">Video File</label>
-                                <input
-                                    type="text"
-                                    name="videoUrl"
-                                    value={videoData.videoUrl}
-                                    readOnly
-                                    className="w-full bg-[#0F0F0F] p-2 rounded-lg border border-gray-700 text-gray-500 text-sm"
-                                    placeholder="File URL will appear here"
-                                />
-                                <input
-                                    type="file"
-                                    accept="video/mp4,video/mkv" // Limit accepted types
-                                    onChange={(e) => uploadFileHandler(e, 'videoUrl')}
-                                    className="block w-full text-sm text-gray-400
-                                        file:mr-4 file:py-2 file:px-4
-                                        file:rounded-full file:border-0
-                                        file:text-sm file:font-semibold
-                                        file:bg-gray-700 file:text-white
-                                        hover:file:bg-gray-600
-                                        cursor-pointer"
-                                />
+                                <input type="text" name="videoUrl" value={videoData.videoUrl} readOnly className="w-full bg-[#0F0F0F] p-2 rounded-lg border border-gray-700 text-gray-500 text-sm" placeholder="File URL will appear here" />
+                                <input type="file" accept="video/mp4,video/mkv" onChange={(e) => uploadFileHandler(e, 'videoUrl')} className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-700 file:text-white hover:file:bg-gray-600 cursor-pointer" />
                             </div>
-                            
-                            {/* Loading Indicator */}
                             {uploading && <p className="text-blue-400 text-sm animate-pulse text-center font-semibold">Uploading file to server... please wait...</p>}
-                            
-                            {/* Category Select */}
-                            <select 
-                                name="category" 
-                                value={videoData.category} 
-                                onChange={handleChange} 
-                                className="w-full bg-[#0F0F0F] p-3 rounded-lg border border-gray-700 text-white cursor-pointer"
-                            >
+                            <select name="category" value={videoData.category} onChange={handleChange} className="w-full bg-[#0F0F0F] p-3 rounded-lg border border-gray-700 text-white cursor-pointer">
                                 <option value="Education">Education</option>
                                 <option value="Gaming">Gaming</option>
                                 <option value="Music">Music</option>
@@ -427,13 +293,7 @@ const Channel = () => {
                                 <option value="Fashion">Fashion</option>
                                 <option value="Tech">Tech</option>
                             </select>
-
-                            {/* Submit Button */}
-                            <button 
-                                type="submit" 
-                                disabled={uploading} // Disable button while uploading
-                                className={`w-full bg-blue-600 text-white py-3 rounded-lg font-bold uppercase tracking-wide mt-2 transition-colors ${uploading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'}`}
-                            >
+                            <button type="submit" disabled={uploading} className={`w-full bg-blue-600 text-white py-3 rounded-lg font-bold uppercase tracking-wide mt-2 transition-colors ${uploading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'}`}>
                                 {isEditing ? "Update Video" : "Upload Video"}
                             </button>
                         </form>
@@ -450,22 +310,11 @@ const Channel = () => {
                         <form onSubmit={handleChannelUpdate} className="flex flex-col gap-4">
                             <div>
                                 <label className="text-sm text-gray-400 mb-1 block">Channel Name</label>
-                                <input 
-                                    type="text" 
-                                    value={channelData.channelName} 
-                                    onChange={(e) => setChannelData({...channelData, channelName: e.target.value})}
-                                    className="w-full bg-[#0F0F0F] p-2 rounded-lg border border-gray-700 text-white" 
-                                    required
-                                />
+                                <input type="text" value={channelData.channelName} onChange={(e) => setChannelData({...channelData, channelName: e.target.value})} className="w-full bg-[#0F0F0F] p-2 rounded-lg border border-gray-700 text-white" required />
                             </div>
                             <div>
                                 <label className="text-sm text-gray-400 mb-1 block">Description</label>
-                                <textarea 
-                                    rows="4"
-                                    value={channelData.description} 
-                                    onChange={(e) => setChannelData({...channelData, description: e.target.value})}
-                                    className="w-full bg-[#0F0F0F] p-2 rounded-lg border border-gray-700 text-white resize-none" 
-                                />
+                                <textarea rows="4" value={channelData.description} onChange={(e) => setChannelData({...channelData, description: e.target.value})} className="w-full bg-[#0F0F0F] p-2 rounded-lg border border-gray-700 text-white resize-none" />
                             </div>
                             <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-lg font-bold mt-2 hover:bg-blue-700 transition-colors">
                                 Save Changes

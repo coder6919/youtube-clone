@@ -4,29 +4,31 @@ import { RxHamburgerMenu } from "react-icons/rx";
 import { IoMdMic, IoMdArrowBack } from "react-icons/io";
 import { CiSearch } from "react-icons/ci";
 import { FaVideo, FaBell, FaUserCircle } from "react-icons/fa";
-import { MdLogout } from "react-icons/md"; 
+import { MdLogout } from "react-icons/md";
+
+// --- REDUX IMPORTS ---
+import { useSelector, useDispatch } from 'react-redux';
+import { logout } from '../redux/userSlice';
 
 const Navbar = ({ toggleSidebar }) => {
-  // I maintain the state for the search query and the mobile search overlay visibility
   const [searchQuery, setSearchQuery] = useState("");
   const [showMobileSearch, setShowMobileSearch] = useState(false); 
   const navigate = useNavigate();
-  
-  // I retrieve the user's authentication details from local storage
-  const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user'));
-  
-  // I safely access the user's first channel ID if it exists
-  const myChannelId = user?.channels?.[0]; 
+  const dispatch = useDispatch();
 
-  // I handle the logout process by clearing local storage and redirecting to login
+  // --- REDUX SELECTOR ---
+  // Get 'currentUser' directly from our global store
+  const { currentUser } = useSelector((state) => state.user);
+  
+  // Safely check for channel ID
+  const myChannelId = currentUser?.channels?.[0]; 
+
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    // --- REDUX ACTION ---
+    dispatch(logout()); // This clears localStorage AND updates state automatically
     navigate('/login');
   };
 
-  // I handle search submissions and close the mobile overlay if it is open
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -38,7 +40,7 @@ const Navbar = ({ toggleSidebar }) => {
   return (
     <nav className="flex justify-between items-center px-4 py-2 bg-[#0F0F0F] sticky top-0 z-50 h-14 border-b border-[#272727]">
       
-      {/* I check if the mobile search overlay should be visible */}
+      {/* Mobile Search Overlay */}
       {showMobileSearch ? (
         <div className="absolute inset-0 bg-[#0F0F0F] z-50 flex items-center px-2 w-full">
            <button onClick={() => setShowMobileSearch(false)} className="p-2 mr-2">
@@ -58,7 +60,7 @@ const Navbar = ({ toggleSidebar }) => {
         </div>
       ) : (
         <>
-          {/* --- LEFT SECTION: Logo & Menu --- */}
+          {/* Left Section */}
           <div className="flex items-center gap-4">
             <button onClick={toggleSidebar} className="p-2 hover:bg-[#272727] rounded-full cursor-pointer transition-colors">
                 <RxHamburgerMenu size={24} color="white" />
@@ -70,7 +72,7 @@ const Navbar = ({ toggleSidebar }) => {
             </Link>
           </div>
 
-          {/* --- MIDDLE SECTION: Desktop Search --- */}
+          {/* Middle Section */}
           <div className="hidden md:flex items-center w-1/2 max-w-[600px]">
             <form onSubmit={handleSearch} className="flex w-full">
                 <div className="flex w-full items-center bg-[#121212] border border-[#303030] rounded-l-full px-4 h-10">
@@ -88,42 +90,32 @@ const Navbar = ({ toggleSidebar }) => {
             </form>
           </div>
 
-          {/* --- RIGHT SECTION: Icons & Profile --- */}
+          {/* Right Section */}
           <div className="flex items-center gap-3 sm:gap-4">
-            {/* I show the search icon only on mobile devices to trigger the overlay */}
             <button onClick={() => setShowMobileSearch(true)} className="md:hidden p-2 hover:bg-[#272727] rounded-full">
                <CiSearch size={24} className="text-white" />
             </button>
 
-            {token ? (
+            {/* Use 'currentUser' from Redux to check auth status */}
+            {currentUser ? (
                 <>
-                    {/* I hide these extra icons on mobile to save space */}
                     <FaVideo size={20} className="cursor-pointer hover:text-white text-gray-200 hidden sm:block" />
                     <FaBell size={20} className="cursor-pointer hover:text-white text-gray-200 hidden sm:block" />
                     
                     <Link to={myChannelId ? `/channel/${myChannelId}` : "/channel/new"}>
                         <img 
-                            src={user?.avatar || "https://via.placeholder.com/30"} 
+                            src={currentUser.avatar || "https://via.placeholder.com/30"} 
                             alt="Avatar" 
                             className="w-8 h-8 rounded-full object-cover border border-[#272727]"
                             onError={(e) => e.target.src = "https://ui-avatars.com/api/?name=User&background=random"}
                         />
                     </Link>
 
-                    {/* RESTORED LOGOUT BUTTON */}
-                    {/* I show a simple Icon on mobile to save space, and the full Red Button on desktop */}
-                    <button 
-                      onClick={handleLogout} 
-                      className="cursor-pointer hover:bg-[#272727] p-2 rounded-full md:hidden text-white"
-                      title="Logout"
-                    >
+                    <button onClick={handleLogout} className="cursor-pointer hover:bg-[#272727] p-2 rounded-full md:hidden text-white" title="Logout">
                       <MdLogout size={24} />
                     </button>
 
-                    <button 
-                      onClick={handleLogout} 
-                      className="hidden md:block bg-[#cc0000] text-white text-sm font-medium px-4 py-1.5 rounded hover:bg-[#990000] transition-colors"
-                    >
+                    <button onClick={handleLogout} className="hidden md:block bg-[#cc0000] text-white text-sm font-medium px-4 py-1.5 rounded hover:bg-[#990000] transition-colors">
                       Logout
                     </button>
                 </>

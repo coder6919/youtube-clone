@@ -1,11 +1,18 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from '../utils/axios'; // Use our configured axios
+import axios from '../utils/axios';
 import { toast } from 'react-toastify';
+
+// --- REDUX IMPORTS ---
+import { useDispatch } from 'react-redux';
+import { loginSuccess } from '../redux/userSlice';
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const navigate = useNavigate();
+  
+  // Initialize Hook
+  const dispatch = useDispatch();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -16,12 +23,12 @@ const Login = () => {
     try {
       const { data } = await axios.post('/auth/login', formData);
       
-      // Save data to local storage
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      // --- REDUX ACTION ---
+      // Instead of manual localStorage.setItem, we just dispatch!
+      dispatch(loginSuccess(data)); 
 
       toast.success("Login Successful!");
-      navigate('/'); // Redirect to Home
+      navigate('/'); 
     } catch (error) {
       toast.error(error.response?.data?.message || "Login Failed");
     }

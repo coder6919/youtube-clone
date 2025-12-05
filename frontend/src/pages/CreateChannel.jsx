@@ -3,40 +3,21 @@ import axios from '../utils/axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
+// --- REDUX IMPORTS ---
+import { useSelector, useDispatch } from 'react-redux';
+import { updateUser } from '../redux/userSlice';
+
 const CreateChannel = () => {
   const [formData, setFormData] = useState({ channelName: '', description: '' });
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user'));
   const [uploading, setUploading] = useState(false);
+
+  // --- REDUX STATE & DISPATCH ---
+  const { currentUser } = useSelector(state => state.user);
+  const dispatch = useDispatch();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const uploadFileHandler = async (e, fieldName) => {
-    const file = e.target.files[0];
-    const formData = new FormData();
-    formData.append('file', file);
-    setUploading(true);
-
-    try {
-      const config = {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      };
-
-      const { data } = await axios.post('/upload', formData, config);
-
-      // Set the returned URL to the specific field (videoUrl or thumbnailUrl)
-      // We prepend the server URL so it works instantly
-      setFormData({ ...videoData, [fieldName]: data });
-      setUploading(false);
-    } catch (error) {
-      console.error(error);
-      setUploading(false);
-      toast.error("File upload failed");
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -45,10 +26,9 @@ const CreateChannel = () => {
       // 1. Call API to create channel
       const { data } = await axios.post('/channels', formData);
 
-      // 2. IMPORTANT: Update local storage with the new channel ID
-      // If we don't do this, the Navbar won't know we have a channel until we re-login
-      const updatedUser = { ...user, channels: [data._id] };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      // 2. REDUX ACTION: Update user state with the new channel
+      // We dispatch the action so the store (and localStorage) is updated automatically
+      dispatch(updateUser({ channels: [data._id] }));
 
       toast.success("Channel Created Successfully!");
       navigate(`/channel/${data._id}`);
@@ -64,8 +44,9 @@ const CreateChannel = () => {
         <p className="text-gray-400 mb-6 text-sm">Create your channel to start uploading videos.</p>
 
         <div className="flex justify-center mb-6">
+          {/* Using currentUser from Redux */}
           <img
-            src={user?.avatar || "https://via.placeholder.com/100"}
+            src={currentUser?.avatar || "https://via.placeholder.com/100"}
             alt="Avatar"
             className="w-24 h-24 rounded-full border-4 border-[#0F0F0F] bg-gray-600"
           />
