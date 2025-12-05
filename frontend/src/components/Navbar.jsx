@@ -5,6 +5,7 @@ import { IoMdMic, IoMdArrowBack } from "react-icons/io";
 import { CiSearch } from "react-icons/ci";
 import { FaVideo, FaBell, FaUserCircle } from "react-icons/fa";
 import { MdLogout } from "react-icons/md";
+import axios from '../utils/axios';
 
 // --- REDUX IMPORTS ---
 import { useSelector, useDispatch } from 'react-redux';
