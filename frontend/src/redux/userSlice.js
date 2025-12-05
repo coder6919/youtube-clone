@@ -1,32 +1,25 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-// 1. Initial State: Try to load user from localStorage first
 const initialState = {
   currentUser: JSON.parse(localStorage.getItem('user')) || null,
-  token: localStorage.getItem('token') || null,
+  // token: ... <-- DELETED (We don't handle tokens in frontend state anymore)
 };
 
 export const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    // Action: Login Success
     loginSuccess: (state, action) => {
+      // The payload now only contains 'user', because we removed 'token' from the backend response
       state.currentUser = action.payload.user;
-      state.token = action.payload.token;
-      // Sync with localStorage
       localStorage.setItem('user', JSON.stringify(action.payload.user));
-      localStorage.setItem('token', action.payload.token);
+      // localStorage.setItem('token'...) <-- DELETED
     },
-    // Action: Logout
     logout: (state) => {
       state.currentUser = null;
-      state.token = null;
-      // Clear localStorage
       localStorage.removeItem('user');
-      localStorage.removeItem('token');
+      // localStorage.removeItem('token') <-- DELETED
     },
-    // Action: Update User Details (e.g., if they subscribe to a channel)
     updateUser: (state, action) => {
       state.currentUser = { ...state.currentUser, ...action.payload };
       localStorage.setItem('user', JSON.stringify(state.currentUser));
