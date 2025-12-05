@@ -44,30 +44,39 @@ export const createVideo = async (req, res) => {
   }
 };
 
-// @desc    Get all videos (Support Search & Filter)
+// @desc    Get all videos (Support Search, Filter & Pagination)
 // @route   GET /api/videos
 // @access  Public
 export const getAllVideos = async (req, res) => {
   try {
-    const { category, search } = req.query;
+    const { category, search, page = 1, limit = 9 } = req.query; // Default: Page 1, 9 videos
 
     let query = {};
 
-    // Filter by Category (Exact Match)
     if (category && category !== "All") {
       query.category = category;
     }
 
-    // Search by Title (Case Insensitive Regex)
     if (search) {
       query.title = { $regex: search, $options: 'i' };
     }
 
     const videos = await Video.find(query)
       .populate('uploader', 'username avatar')
-      .populate('channelId', 'channelName');
+      .populate('channelId', 'channelName')
+      .limit(limit * 1)           // Limit results
+      .skip((page - 1) * limit)   // Skip previous pages
+      .sort({ createdAt: -1 });   // Newest first
 
-    res.status(200).json(videos);
+    // Get total count for frontend logic
+    const count = await Video.countDocuments(query);
+
+    res.status(200).json({
+      videos,
+      totalPages: Math.ceil(count / limit),
+      currentPage: Number(page),
+      totalVideos: count
+    });
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch videos", error: error.message });
   }
