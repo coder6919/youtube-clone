@@ -18,10 +18,21 @@ function App() {
   const toggleSidebar = () => {
     setSidebarOpen(prev => !prev);
   };
+  const HomeSkeleton = () => (
+    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+        <div key={i} className="animate-pulse">
+          <div className="aspect-video bg-[#272727] rounded-xl mb-2"></div>
+          <div className="h-4 bg-[#272727] rounded w-3/4 mb-2"></div>
+          <div className="h-3 bg-[#272727] rounded w-1/2"></div>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <Router>
-      <Suspense>
+      <Suspense fallback={<HomeSkeleton />}>
         <div className="flex flex-col h-screen h-[100dvh] overflow-hidden bg-[#0F0F0F] text-white">
           {/* 1. Navbar stays at the top */}
           <Navbar toggleSidebar={toggleSidebar} />

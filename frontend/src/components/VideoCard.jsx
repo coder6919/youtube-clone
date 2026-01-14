@@ -9,12 +9,14 @@ const VideoCard = ({ video, index }) => {
     e.target.src = "https://ui-avatars.com/api/?name=Video&background=random"; // Fallback image
   };
 
+  const optimizedThumbnail = getOptimizedUrl(video.thumbnailUrl, 400, 225);
+
   return (
     <Link to={`/video/${video._id}`} className="flex flex-col gap-2 cursor-pointer group">
       {/* Thumbnail Container */}
       <div className="relative rounded-xl overflow-hidden aspect-video">
         <img
-          src={video.thumbnailUrl}
+          src={optimizedThumbnail}
           alt={video.title}
           onError={handleImageError}
           // 2. Add these performance attributes:
