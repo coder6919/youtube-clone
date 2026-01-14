@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { getOptimizedUrl } from '../utils/cloudinary';
 // import { formatDistanceToNow } from 'date-fns'; // Optional: for "2 days ago"
 // If you don't want to install date-fns, you can just print the date string directly
 
