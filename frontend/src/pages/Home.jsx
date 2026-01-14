@@ -101,8 +101,8 @@ const Home = () => {
             </div>
         )}
 
-        {videos.map((video) => (
-          <VideoCard key={video._id} video={video} />
+        {videos.map((video,index) => (
+          <VideoCard key={video._id} video={video} index={index} />
         ))}
 
         {!loading && videos.length === 0 && !error && (
