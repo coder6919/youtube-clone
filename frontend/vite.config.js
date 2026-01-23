@@ -11,20 +11,14 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            // Group React, ReactDOM, and Scheduler together to avoid 'unstable_now' errors
-            if (
-              id.includes('react') ||
-              id.includes('react-dom') ||
-              id.includes('scheduler')
-            ) {
-              return 'vendor_react_core';
-            }
-            // Keep the heavy video player separate
+            // Keep ONLY plyr separate as it is very large and independent
             if (id.includes('plyr')) {
               return 'vendor_player';
             }
-            // Group remaining dependencies
-            return 'vendor_libs';
+
+            // Put ALL other node_modules into one stable vendor chunk.
+            // This prevents React's internal modules from breaking each other.
+            return 'vendor_main';
           }
 
 
