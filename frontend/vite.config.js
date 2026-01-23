@@ -9,11 +9,17 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          player: ['plyr-react'],
+        manualChunks(id) {
+          if (id.includes('node_modules')); {
+            if (id.includes('react')) return 'vendor_react';
+            if (id.includes('plyr')) return 'vendor_player';
+            if (id.includes('axios')) return 'vendor_network';
+            return 'vendor_others';
+          }
+          
+
         },
       },
     },
-  }
+  },
 })
