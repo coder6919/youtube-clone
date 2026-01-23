@@ -7,11 +7,11 @@ provider:
   memorySize: 512
   timeout: 10
   environment:
-    MONGO_URI: "mongodb+srv://ssaifssyed17_db_user:0QFksb5a39tTxLrI@cluster3.pazb7wt.mongodb.net/"
-    JWT_SECRET: "your_super_secret_key_123"
-    CLOUDINARY_CLOUD_NAME: "dcs7inxmp"
-    CLOUDINARY_API_KEY: "92831575398237"
-    CLOUDINARY_API_SECRET: "s_ZuEJdXP34Wr5q-dPXwPw8PEWc"
+    MONGO_URI: ${env:MONGO_URI}
+    JWT_SECRET: ${env:JWT_SECRET}
+    CLOUDINARY_CLOUD_NAME: ${env:CLOUDINARY_CLOUD_NAME}
+    CLOUDINARY_API_KEY: ${env:CLOUDINARY_API_KEY}
+    CLOUDINARY_API_SECRET: ${env:CLOUDINARY_API_SECRET}
 
 functions:
   api:
