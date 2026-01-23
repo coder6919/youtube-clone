@@ -1,5 +1,7 @@
 service: mern-video-backend
 
+useDotenv: true
+
 provider:
   name: aws
   runtime: nodejs18.x
