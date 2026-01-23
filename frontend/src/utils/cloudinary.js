@@ -1,4 +1,3 @@
-// frontend/src/utils/cloudinary.js
 
 /**
  * Optimizes Cloudinary URLs by adding transformation parameters for 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { getOptimizedUrl } from '../utils/cloudinary';
 // import { formatDistanceToNow } from 'date-fns'; // Optional: for "2 days ago"

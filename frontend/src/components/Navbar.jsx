@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { RxHamburgerMenu } from "react-icons/rx";
-import { IoMdMic, IoMdArrowBack } from "react-icons/io";
+import { IoMdArrowBack } from "react-icons/io";
 import { CiSearch } from "react-icons/ci";
 import { FaVideo, FaBell, FaUserCircle } from "react-icons/fa";
 import { MdLogout } from "react-icons/md";

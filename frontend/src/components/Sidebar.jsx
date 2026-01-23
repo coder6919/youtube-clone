@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { GoHome } from "react-icons/go";
 import { SiYoutubeshorts } from "react-icons/si";
