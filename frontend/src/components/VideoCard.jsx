@@ -18,6 +18,8 @@ const VideoCard = ({ video, index }) => {
         <img
           src={optimizedThumbnail}
           alt={video.title}
+          width="400"
+          height="225"
           onError={handleImageError}
           // 2. Add these performance attributes:
           loading={index < 4 ? "eager" : "lazy"}
