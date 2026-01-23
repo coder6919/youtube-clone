@@ -10,13 +10,23 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('node_modules')); {
-            if (id.includes('react')) return 'vendor_react';
-            if (id.includes('plyr')) return 'vendor_player';
-            if (id.includes('axios')) return 'vendor_network';
-            return 'vendor_others';
+          if (id.includes('node_modules')) {
+            // Group React, ReactDOM, and Scheduler together to avoid 'unstable_now' errors
+            if (
+              id.includes('react') ||
+              id.includes('react-dom') ||
+              id.includes('scheduler')
+            ) {
+              return 'vendor_react_core';
+            }
+            // Keep the heavy video player separate
+            if (id.includes('plyr')) {
+              return 'vendor_player';
+            }
+            // Group remaining dependencies
+            return 'vendor_libs';
           }
-          
+
 
         },
       },
